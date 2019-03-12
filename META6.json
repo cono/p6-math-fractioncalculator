@@ -1,0 +1,19 @@
+{
+  "authors" : [
+    "cono"
+  ],
+  "build-depends" : [ ],
+  "depends" : [ ],
+  "description" : "infix to postfix converter + fraction calculator",
+  "license" : "Artistic-2.0",
+  "name" : "Math::FractionCalculator",
+  "perl" : "6.c",
+  "provides" : {
+    "Math::FractionCalculator" : "lib/Math/FractionCalculator.pm6"
+  },
+  "resources" : [ ],
+  "source-url" : "",
+  "tags" : [ ],
+  "test-depends" : [ ],
+  "version" : "0.0.1"
+}
