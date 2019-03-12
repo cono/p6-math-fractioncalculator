@@ -11,7 +11,14 @@ is $calc.parse("(2 + 2) + (2 + 2)").eval, 8, "no fraction equation";
 is $calc.parse("42").eval, 42, "single number";
 is $calc.parse("(1/2 + 1/3)").eval, "5/6", "enclosed in square bracket";
 
-my @tests = "1/2 + 2/3" => "7/6", "(3/6) / (2/3)" => "3/4", "(1/2 + 2/3) - ((2/7) / (1/8))" => "-47/42", "1 + 1/2" => "3/2";
+is $calc.parse("1/2 + 1/0").eval, "1/0", "Edge case, probably should be Inf";
+
+my @tests =
+    "1/2 + 2/3" => "7/6",
+    "(3/6) / (2/3)" => "3/4",
+    "(1/2 + 2/3) - ((2/7) / (1/8))" => "-47/42",
+    "1 + 1/2" => "3/2",
+    "((2/3) * (1/6))" => "1/9";
 for @tests -> $expr {
     is $calc.parse($expr.key).eval, $expr.value, "{$expr.key} = {$expr.value}";
 }
