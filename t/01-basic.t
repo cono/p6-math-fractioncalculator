@@ -13,15 +13,32 @@ is $calc.parse("(1/2 + 1/3)").eval, "5/6", "enclosed in square bracket";
 
 is $calc.parse("1/2 + 1/0").eval, "1/0", "Edge case, probably should be Inf";
 
-my @tests =
-    "1/2 + 2/3" => "7/6",
-    "(3/6) / (2/3)" => "3/4",
-    "(1/2 + 2/3) - ((2/7) / (1/8))" => "-47/42",
-    "1 + 1/2" => "3/2",
-    "((2/3) * (1/6))" => "1/9",
-    "1/(2/(3/(4)))" => '3/8';
-for @tests -> $expr {
-    is $calc.parse($expr.key).eval, $expr.value, "{$expr.key} = {$expr.value}";
-}
+subtest "General equations" => sub {
+    my @tests =
+        "1/2 + 2/3" => "7/6",
+        "(3/6) / (2/3)" => "3/4",
+        "(1/2 + 2/3) - ((2/7) / (1/8))" => "-47/42",
+        "1 + 1/2" => "3/2",
+        "((2/3) * (1/6))" => "1/9",
+        "1/(2/(3/(4)))" => '3/8';
+    for @tests -> $expr {
+        is $calc.parse($expr.key).eval, $expr.value, "{$expr.key} = {$expr.value}";
+    }
+};
+
+subtest "Syntax error" => sub {
+    my @tests =
+        "1 2",
+        "(1",
+        "(1))",
+        "((1)",
+        "1 + 2 3 / 4";
+
+    for @tests -> $expr {
+        dies-ok { $calc.parse($expr) }, "$expr";
+    }
+};
+
+
 
 done-testing;

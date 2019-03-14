@@ -1,93 +1,102 @@
 use v6.c;
-unit class Math::FractionCalculator:ver<0.0.1>;
 
-grammar Evaluation {
-    token TOP {
-        \s* <expression> \s*
-    }
-
-    token expression {
-        [ <brackets> | <operand> ] \s* <operator> \s* <expression> |
-        <brackets> |
-        <operand>
-    }
-
-    token brackets {
-        <open-bracket> \s* <expression> \s* <closing-bracket>
-    }
-
-    token open-bracket { '(' }
-    token closing-bracket { ')' }
-
-    token operand { \d+ }
-
-    token operator { <[+\-/*]> }
+class X::Math::FractionCalculator::SyntaxError is Exception {
+    method message { "Syntax error" }
 }
 
-my %precedence =
-    '+' => 0,
-    '-' => 0,
-    '*' => 1,
-    '/' => 1;
-my %operators  =
-    '+' => &[+],
-    '-' => &[-],
-    '*' => &[*],
-    '/' => &[/];
+class Math::FractionCalculator:ver<0.0.1> {
 
-has @!stack;
-has @.result;
-
-method parse($str) {
-    my $match = Evaluation.parse($str);
-
-    @!stack = ();
-    @!result = ();
-    self!traverse-match-object({brackets => {expression => $match<expression>}});
-
-    return self;
-}
-
-method !traverse-match-object($match) {
-    with $match<brackets> {
-        @!stack.push('(');
-
-        samewith(self, $_<expression>);
-
-        while '(' ne (my $op = @!stack.pop) {
-            @!result.push: %operators{ $op };
-        }
-    } orwith $match<operand> {
-        @!result.push: .Int;
-    }
-
-    with $match<operator> {
-        while @!stack[*-1] ne '(' && %precedence{ @!stack[*-1] } >= %precedence{ .Str } {
-            @!result.push: %operators{ @!stack.pop };
-        }
-        @!stack.push: .Str;
-    }
-
-    samewith(self, $_) with $match<expression>;
-}
-
-method eval {
-    die "prase should be called first" unless @!result;
-
-    @!stack = ();
-
-    for @!result -> $item {
-        when $item ~~ Code {
-            @!stack.push: $item(|@!stack.splice: * - $item.count);
+    grammar Evaluation {
+        token TOP {
+            \s* <expression> \s*
         }
 
-        @!stack.push: $item;
+        token expression {
+            [ <brackets> | <operand> ] \s* <operator> \s* <expression> |
+            <brackets> |
+            <operand>
+        }
+
+        token brackets {
+            <open-bracket> \s* <expression> \s* <closing-bracket>
+        }
+
+        token open-bracket { '(' }
+        token closing-bracket { ')' }
+
+        token operand { \d+ }
+
+        token operator { <[+\-/*]> }
     }
 
-    my $result = @!stack[0];
-    $result = $result.nude.join('/') if $result ~~ Rat;
+    my %precedence =
+        '+' => 0,
+        '-' => 0,
+        '*' => 1,
+        '/' => 1;
+    my %operators  =
+        '+' => &[+],
+        '-' => &[-],
+        '*' => &[*],
+        '/' => &[/];
 
-    return $result;
+    has @!stack;
+    has @.result;
+
+    method parse($str) {
+        my $match = Evaluation.parse($str);
+
+        X::Math::FractionCalculator::SyntaxError.new.throw unless $match;
+
+        @!stack = ();
+        @!result = ();
+        self!traverse-match-object({brackets => {expression => $match<expression>}});
+
+        return self;
+    }
+
+    method !traverse-match-object($match) {
+        with $match<brackets> {
+            @!stack.push('(');
+
+            samewith(self, $_<expression>);
+
+            while '(' ne (my $op = @!stack.pop) {
+                @!result.push: %operators{ $op };
+            }
+        } orwith $match<operand> {
+            @!result.push: .Int;
+        }
+
+        with $match<operator> {
+            while @!stack[*-1] ne '(' && %precedence{ @!stack[*-1] } >= %precedence{ .Str } {
+                @!result.push: %operators{ @!stack.pop };
+            }
+            @!stack.push: .Str;
+        }
+
+        samewith(self, $_) with $match<expression>;
+    }
+
+    method eval {
+        die "prase should be called first" unless @!result;
+
+        @!stack = ();
+
+        for @!result -> $item {
+            when $item ~~ Code {
+                @!stack.push: $item(|@!stack.splice: * - $item.count);
+            }
+
+            @!stack.push: $item;
+        }
+
+        my $result = @!stack[0];
+        $result = $result.nude.join('/') if $result ~~ Rat;
+
+        return $result;
+    }
+
 }
 
 =begin pod
