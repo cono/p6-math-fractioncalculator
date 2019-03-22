@@ -5,13 +5,11 @@ use Math::FractionCalculator;
 
 my $calc = Math::FractionCalculator.new;
 
-is $calc.parse("2 + 2").result, (2, 2, &[+]), 'infix to postfix converter';
+is $calc.calc("(2 + 2) + (2 + 2)"), 8, "no fraction equation";
+is $calc.calc("42"), 42, "single number";
+is $calc.calc("(1/2 + 1/3)"), "5/6", "enclosed in square bracket";
 
-is $calc.parse("(2 + 2) + (2 + 2)").eval, 8, "no fraction equation";
-is $calc.parse("42").eval, 42, "single number";
-is $calc.parse("(1/2 + 1/3)").eval, "5/6", "enclosed in square bracket";
-
-is $calc.parse("1/2 + 1/0").eval, "1/0", "Edge case, probably should be Inf";
+is $calc.calc("1/2 + 1/0"), "1/0", "Edge case, probably should be Inf";
 
 subtest "General equations" => sub {
     my @tests =
@@ -22,7 +20,7 @@ subtest "General equations" => sub {
         "((2/3) * (1/6))" => "1/9",
         "1/(2/(3/(4)))" => '3/8';
     for @tests -> $expr {
-        is $calc.parse($expr.key).eval, $expr.value, "{$expr.key} = {$expr.value}";
+        is $calc.calc($expr.key), $expr.value, "{$expr.key} = {$expr.value}";
     }
 };
 
@@ -35,7 +33,7 @@ subtest "Syntax error" => sub {
         "1 + 2 3 / 4";
 
     for @tests -> $expr {
-        dies-ok { $calc.parse($expr) }, "$expr";
+        dies-ok { $calc.calc($expr) }, "$expr";
     }
 };
 

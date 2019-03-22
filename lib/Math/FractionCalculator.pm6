@@ -7,103 +7,84 @@ class X::Math::FractionCalculator::SyntaxError is Exception {
 class Math::FractionCalculator:ver<0.0.1> {
 
     grammar Evaluation {
-        token TOP {
-            \s* <expression> \s*
+        rule TOP {
+            ^ <expression> $
         }
-
-        token expression {
-            [ <brackets> | <operand> ] \s* <operator> \s* <expression> |
-            <brackets> |
-            <operand>
+        rule expression {
+            | <term>+ %% $<op>=(['+'|'-'])
+            | <group>
         }
-
-        token brackets {
-            <open-bracket> \s* <expression> \s* <closing-bracket>
+        rule term {
+            <factor>+  %% $<op>=(['*'|'/'])
         }
-
-        token open-bracket { '(' }
-        token closing-bracket { ')' }
-
-        token operand { \d+ }
-
-        token operator { <[+\-/*]> }
+        rule factor {
+            | <value>
+            | <group>
+        }
+        rule group {
+            '(' <expression> ')'
+        }
+        token value { \d+ }
     }
 
-    my %precedence =
-        '+' => 0,
-        '-' => 0,
-        '*' => 1,
-        '/' => 1;
-    my %operators  =
-        '+' => &[+],
-        '-' => &[-],
-        '*' => &[*],
-        '/' => &[/];
+    class EvaluationActions {
+        my %operators  =
+            '+' => &[+],
+            '-' => &[-],
+            '*' => &[*],
+            '/' => &[/];
 
-    has @!stack;
-    has @.result;
+        method TOP($/) {
+            $/.make: $<expression>.ast
+        }
 
-    method parse($str) {
-        my $match = Evaluation.parse($str);
+        method group($/) {
+            $/.make: $<expression>.ast
+        }
 
-        X::Math::FractionCalculator::SyntaxError.new.throw unless $match;
+        method value($/) {
+            $/.make: +$/
+        }
 
-        @!stack = ();
-        @!result = ();
-        self!traverse-match-object({brackets => {expression => $match<expression>}});
+        method factor($/) {
+            with $<value> {
+                $/.make: +$<value>;
+            } orwith $<group> {
+                $/.make: $<group>.ast;
+            }
+        }
 
-        return self;
+        method term($/) {
+            my $i = 0;
+
+            $/.make: $<factor>».ast.reduce({ %operators{ $<op>[$i++] }($^a, $^b) });
+        }
+
+        method expression($/) {
+            $/.make: $<group>.ast when $<group>;
+
+            my $i = 0;
+            $/.make: $<term>».ast.reduce({ %operators{ $<op>[$i++] }($^a, $^b) });
+        }
     }
 
-    method !traverse-match-object($match) {
-        with $match<brackets> {
-            @!stack.push('(');
+    method calc(Str $str) {
+        my $eval = Evaluation.parse($str, :actions(EvaluationActions));
 
-            samewith(self, $_<expression>);
+        X::Math::FractionCalculator::SyntaxError.new.throw unless $eval;
 
-            while '(' ne (my $op = @!stack.pop) {
-                @!result.push: %operators{ $op };
-            }
-        } orwith $match<operand> {
-            @!result.push: .Int;
-        }
-
-        with $match<operator> {
-            while @!stack[*-1] ne '(' && %precedence{ @!stack[*-1] } >= %precedence{ .Str } {
-                @!result.push: %operators{ @!stack.pop };
-            }
-            @!stack.push: .Str;
-        }
-
-        samewith(self, $_) with $match<expression>;
-    }
-
-    method eval {
-        die "prase should be called first" unless @!result;
-
-        @!stack = ();
-
-        for @!result -> $item {
-            when $item ~~ Code {
-                @!stack.push: $item(|@!stack.splice: * - $item.count);
-            }
-
-            @!stack.push: $item;
-        }
-
-        my $result = @!stack[0];
+        my $result = $eval.ast;
         $result = $result.nude.join('/') if $result ~~ Rat;
 
         return $result;
     }
-
 }
 
 =begin pod
 
 =head1 NAME
 
-Math::FractionCalculator - infix to postfix converter + fraction calculator
+Math::FractionCalculator - grammar based fraction calculator
 
 =head1 SYNOPSIS
 
@@ -111,7 +92,7 @@ Math::FractionCalculator - infix to postfix converter + fraction calculator
 
 use Math::FractionCalculator;
 
-Math::FractionCalculator.new.parse("1/2 + 1/3").eval; # gives 5/6
+Math::FractionCalculator.new.calc("1/2 + 1/3"); # gives 5/6
 
 =end code
 
@@ -120,11 +101,7 @@ Math::FractionCalculator.new.parse("1/2 + 1/3").eval; # gives 5/6
 Math::FractionCalculator is a simple fraction calculator which understand only
 square brackets and +, -, /, * operators only.
 
-Method parse converts equation from infix form to postifx form (result placed
-to @.result field).
-
-Method eval - evaluates postfix expression via stack machine and returns Rat
-result.
+Method calc takes string with expression and returns string result of a fraction.
 
 =head1 AUTHOR
 
