@@ -1,0 +1,15 @@
+---
+links:  []
+endpoints: 
+  - 
+    host-env: FRACTION_CALCULATOR_HOST
+    name: HTTP
+    protocol: http
+    id: http
+    port-env: FRACTION_CALCULATOR_PORT
+env:  []
+id: fraction-calculator
+cro: 1
+name: fraction-calculator
+entrypoint: service.p6
+...
