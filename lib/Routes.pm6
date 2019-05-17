@@ -17,7 +17,7 @@ sub routes() is export {
                 }
 
                 if $! {
-                    content 'application/json', ${
+                    bad-request 'application/json', ${
                         :$equation,
                         error => $!.message
                     };
