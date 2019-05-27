@@ -19,7 +19,9 @@ subtest "General equations" => sub {
         "1 + 1/2" => "3/2",
         "((2/3) * (1/6))" => "1/9",
         "1/(2/(3/(4)))" => '3/8',
-        "1/2 + 1/2" => "1";
+        "1/2 + 1/2" => "1",
+        "(4/2)" => "2";
+
     for @tests -> $expr {
         is $calc.calc($expr.key), $expr.value, "{$expr.key} = {$expr.value}";
     }
