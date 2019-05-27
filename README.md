@@ -3,7 +3,7 @@
 NAME
 ====
 
-Math::FractionCalculator - infix to postfix converter + fraction calculator
+Math::FractionCalculator - grammar based fraction calculator
 
 SYNOPSIS
 ========
@@ -11,7 +11,7 @@ SYNOPSIS
 ```perl6
 use Math::FractionCalculator;
 
-Math::FractionCalculator.new.parse("1/2 + 1/3").eval; # gives 5/6
+Math::FractionCalculator.new.calc("1/2 + 1/3"); # gives 5/6
 ```
 
 DESCRIPTION
@@ -19,9 +19,7 @@ DESCRIPTION
 
 Math::FractionCalculator is a simple fraction calculator which understand only square brackets and +, -, /, * operators only.
 
-Method parse converts equation from infix form to postifx form (result placed to @.result field).
-
-Method eval - evaluates postfix expression via stack machine and returns Rat result.
+Method calc takes string with expression and returns string result of a fraction.
 
 AUTHOR
 ======

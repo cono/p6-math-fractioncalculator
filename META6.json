@@ -4,12 +4,14 @@
   ],
   "build-depends" : [ ],
   "depends" : [ ],
-  "description" : "infix to postfix converter + fraction calculator",
+  "description" : "grammar based fraction calculator",
   "license" : "Artistic-2.0",
   "name" : "Math::FractionCalculator",
   "perl" : "6.c",
   "provides" : {
-    "Math::FractionCalculator" : "lib/Math/FractionCalculator.pm6"
+    "Math::FractionCalculator" : "lib/Math/FractionCalculator.pm6",
+    "Math::PolishNotation" : "lib/Math/PolishNotation.pm6",
+    "Routes" : "lib/Routes.pm6"
   },
   "resources" : [ ],
   "source-url" : "https://github.com/cono/p6-math-fractioncalculator.git",

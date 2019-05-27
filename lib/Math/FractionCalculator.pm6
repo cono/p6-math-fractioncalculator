@@ -74,7 +74,11 @@ class Math::FractionCalculator:ver<0.0.1> {
         X::Math::FractionCalculator::SyntaxError.new.throw unless $eval;
 
         my $result = $eval.ast;
-        $result = $result.nude.join('/') if $result ~~ Rat;
+        if $result ~~ Rat {
+            with $result.nude {
+                $result = .reduce(&[==]) ?? ~$result !! .join("/");
+            }
+        }
 
         return $result;
     }
